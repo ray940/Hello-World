@@ -1,0 +1,176 @@
+Skip to content
+ 
+Search or jump to…
+
+Pull requests
+Issues
+Marketplace
+Explore
+ 
+@ray940 
+96
+331 276 adafruit/Adafruit_GPS
+ Code  Issues 4  Pull requests 3  Projects 0  Security  Insights
+Fix for #41 and #68 time parsing issues, based on fixes from HamishB
+
+ master (#91)  1.1.0
+@drak7
+drak7 committed on May 16
+1 parent c684991 commit efa9bfd8578ec43707940ab64f4f2f904b9d610f
+Showing  with 28 additions and 12 deletions.
+  24  Adafruit_GPS.cpp 
+@@ -64,7 +64,7 @@ boolean Adafruit_GPS::parse(char *nmea) {
+    // check checksum
+    char *p = strchr(nmea,'$');
+    if(p == NULL) return false;
+    else{ 
+    else{
+      for (char *p1 = p+1; p1 < ast; p1++) {
+        sum ^= *p1;
+      }
+@@ -78,7 +78,7 @@ boolean Adafruit_GPS::parse(char *nmea) {
+  }
+  // look for a few common sentences
+  char *p = nmea;
+  
+
+  if (strStartsWith(nmea, "$GPGGA")) {
+    // found GGA
+    // get time
+@@ -96,13 +96,13 @@ boolean Adafruit_GPS::parse(char *nmea) {
+    parseLon(p);
+    p = strchr(p, ',')+1;
+    if(!parseLonDir(p)) return false;
+  
+
+    p = strchr(p, ',')+1;
+    if (',' != *p)
+    {
+      fixquality = atoi(p);
+      if(fixquality > 0){
+        fix = true; 
+        fix = true;
+        lastFix = recvdTime;
+      } else
+        fix = false;
+@@ -134,7 +134,7 @@ boolean Adafruit_GPS::parse(char *nmea) {
+    }
+    return true;
+  }
+  
+
+  if (strStartsWith(nmea, "$GPRMC")) {
+    // found RMC
+    // get time
+@@ -182,7 +182,7 @@ boolean Adafruit_GPS::parse(char *nmea) {
+    }
+    return true;
+  }
+  
+
+  if (strStartsWith(nmea, "$GPGLL")) {
+    // found GLL
+    // parse out latitude
+@@ -220,13 +220,13 @@ boolean Adafruit_GPS::parse(char *nmea) {
+/**************************************************************************/
+void Adafruit_GPS::parseTime(char *p) {
+    // get time
+    float timef = atof(p);
+    uint32_t time = timef;
+    uint32_t time = atol(p);
+    hour = time / 10000;
+    minute = (time % 10000) / 100;
+    seconds = (time % 100);
+
+    milliseconds = fmod(timef, 1.0) * 1000;
+    p = strchr(p, '.')+1;
+    milliseconds = atoi(p);
+    lastTime = recvdTime;
+}
+
+@@ -345,7 +345,7 @@ boolean Adafruit_GPS::parseFix(char *p) {
+
+/**************************************************************************/
+/*!
+    @brief Time in seconds since the last position fix was obtained. Will 
+    @brief Time in seconds since the last position fix was obtained. Will
+    fail by rolling over to zero after one millis() cycle, about 6-1/2 weeks.
+    @return float value in seconds since last fix.
+*/
+@@ -356,7 +356,7 @@ float Adafruit_GPS::secondsSinceFix() {
+
+/**************************************************************************/
+/*!
+    @brief Time in seconds since the last GPS time was obtained. Will fail 
+    @brief Time in seconds since the last GPS time was obtained. Will fail
+    by rolling over to zero after one millis() cycle, about 6-1/2 weeks.
+    @return float value in seconds since last GPS time.
+*/
+@@ -367,7 +367,7 @@ float Adafruit_GPS::secondsSinceTime() {
+
+/**************************************************************************/
+/*!
+    @brief Time in seconds since the last GPS date was obtained. Will fail 
+    @brief Time in seconds since the last GPS date was obtained. Will fail
+    by rolling over to zero after one millis() cycle, about 6-1/2 weeks.
+    @return float value in seconds since last GPS date.
+*/
+  8  examples/GPS_HardwareSerial_Parsing/GPS_HardwareSerial_Parsing.ino 
+@@ -83,9 +83,17 @@ void loop() // run over and over again
+  if (millis() - timer > 2000) {
+    timer = millis(); // reset the timer
+    Serial.print("\nTime: ");
+    if (GPS.hour < 10) { Serial.print('0'); }
+    Serial.print(GPS.hour, DEC); Serial.print(':');
+    if (GPS.minute < 10) { Serial.print('0'); }
+    Serial.print(GPS.minute, DEC); Serial.print(':');
+    if (GPS.seconds < 10) { Serial.print('0'); }
+    Serial.print(GPS.seconds, DEC); Serial.print('.');
+    if (GPS.milliseconds < 10) {
+      Serial.print("00");
+    } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
+      Serial.print("0");
+    }
+    Serial.println(GPS.milliseconds);
+    Serial.print("Date: ");
+    Serial.print(GPS.day, DEC); Serial.print('/');
+  8  examples/GPS_SoftwareSerial_Parsing/GPS_SoftwareSerial_Parsing.ino 
+@@ -86,9 +86,17 @@ void loop()                     // run over and over again
+    timer = millis(); // reset the timer
+
+    Serial.print("\nTime: ");
+    if (GPS.hour < 10) { Serial.print('0'); }
+    Serial.print(GPS.hour, DEC); Serial.print(':');
+    if (GPS.minute < 10) { Serial.print('0'); }
+    Serial.print(GPS.minute, DEC); Serial.print(':');
+    if (GPS.seconds < 10) { Serial.print('0'); }
+    Serial.print(GPS.seconds, DEC); Serial.print('.');
+    if (GPS.milliseconds < 10) {
+      Serial.print("00");
+    } else if (GPS.milliseconds > 9 && GPS.milliseconds < 100) {
+      Serial.print("0");
+    }
+    Serial.println(GPS.milliseconds);
+    Serial.print("Date: ");
+    Serial.print(GPS.day, DEC); Serial.print('/');
+0 comments on commit efa9bfd
+@ray940
+ 
+ 
+Leave a comment
+
+Attach files by dragging & dropping, selecting or pasting them.
+ 
+ You’re not receiving notifications from this thread.
+© 2019 GitHub, Inc.
+Terms
+Privacy
+Security
+Status
+Help
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
